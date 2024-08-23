@@ -1,13 +1,15 @@
 #![allow(unused)]
+use crate::combat::StatusEffect;
+
 use super::combat::BuffType;
 #[derive(Clone, Debug)]
 pub struct Entity {
-    name: String,
+    pub name: String,
     pub stats: Stats,
-    poitions: Position,
-    entity_type: EntityType,
+    pub poitions: Position,
+    pub entity_type: EntityType,
     pub skills: [String; 4],
-    pub effects: Vec<BuffType>,
+    pub effects: Vec<StatusEffect>,
     pub status : Status,
 }
 
@@ -35,4 +37,18 @@ pub struct Position {
 pub enum EntityType {
     Player,
     Enemy,
+}
+
+impl Entity {
+    pub fn new(name: String, max_hp: i32, atk: f32, def: f32, x: i32, y: i32, entity_type: EntityType) -> Self{
+        Entity{
+            name: name,
+            stats: Stats { max_hp: max_hp, cur_hp: max_hp, atk: atk, def: def },
+            poitions: Position { x: x, y: y },
+            entity_type: entity_type,
+            skills: ["".to_string(), "".to_string(), "".to_string(), "".to_string()],
+            effects: vec![],
+            status: Status::Alive
+        }
+    }
 }

@@ -7,15 +7,22 @@ use std::{
 
 #[derive(Clone, Debug)]
 struct Skill {
-    name: String,
-    cost: i32,
-    effects: Vec<Effect>,
+    pub name: String,
+    pub cost: i32,
+    pub effects: Vec<Effect>,
 }
 
 #[derive(Clone, Debug)]
 enum Effect {
     Attack(f32),
-    Buff(BuffType),
+    Buff(StatusEffect),
+    Heal(i32),
+}
+
+#[derive(Clone, Debug)]
+pub struct StatusEffect{
+    duration: u8,
+    buff_type: BuffType,
 }
 
 #[derive(Clone, Debug)]
@@ -23,7 +30,6 @@ pub enum BuffType {
     AttackUp(f32),
     DamageUp(f32),
     DefenseUp(f32),
-    Heal(i32),
 }
 
 impl Skill {
@@ -62,7 +68,7 @@ fn make_skills() -> Vec<Skill>{
         "heal".to_string(),
         2,
         vec![
-            Effect::Buff(BuffType::Heal(200))
+            Effect::Heal(300),
         ]
     );
     let splash = Skill::new(
@@ -81,18 +87,31 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
     //turn loop
     loop {
         //menu selection loop
+        println!("enemy HP: {}/{}", enemy.stats.cur_hp, enemy.stats.max_hp);
+        println!("player HP: {}/{}", player.stats.cur_hp, player.stats.max_hp);
+
         loop {
             let mut input = option_input();
 
             match input {
                 //attack
-                1 => use_skill(player,"basic".to_string(),enemy, &skill_list),
+                1 => {
+                    use_skill(player,"basic".to_string(),enemy, &skill_list);
+                    break;
+                },
                 //skill
-                2 => skill_menu(player, enemy, &skill_list),
+                2 => {
+                    skill_menu(player, enemy, &skill_list);
+                    break;
+                },
                 //defend
-                3 => (),
+                3 => {
+                    break;
+                },
                 //flee
-                4 => (),
+                4 => {
+                    break;
+                },
 
                 _ => println!("wrong number, please try again"),
             }
@@ -103,13 +122,34 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
 fn skill_menu(player: &mut Entity, enemy: &mut Entity, skill_list: &Vec<Skill>){
     loop {
         let mut input2 = option_input();
+        let success = false;
 
         match input2 {
         //skills
-            1 => (),
-            2 => (),
-            3 => (),
-            4 => (),
+            1 => {
+                if player.skills[0] != ""{
+                    use_skill(player, player.skills[0].clone(), enemy, skill_list);
+                    break;
+                }
+            },
+            2 => {
+                if player.skills[1] != ""{
+                    use_skill(player, player.skills[1].clone(), enemy, skill_list);
+                    break;
+                }
+            },
+            3 => {
+                if player.skills[2] != ""{
+                    use_skill(player, player.skills[2].clone(), enemy, skill_list);
+                    break;
+                }
+            },
+            4 => {
+                if player.skills[3] != ""{
+                    use_skill(player, player.skills[3].clone(), enemy, skill_list);
+                    break;
+                }
+            },
             //go back
             5 => break,
             _ => println!("wrong number, please try again"),
@@ -118,20 +158,20 @@ fn skill_menu(player: &mut Entity, enemy: &mut Entity, skill_list: &Vec<Skill>){
 }
 
 //applies the effects of skills
-fn use_skill(caster: &mut Entity,skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
-    let skill = match search_skill(skill_name, skill_list) {
-        Some(a) => a,
-        None => panic!("failed to find the skill"),
-    };
+fn use_skill(caster: &mut Entity, skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
+    let skill = search_skill(skill_name, skill_list);
+    let success = true;
 
     for effect in &skill.effects{
         match effect {
             Effect::Attack(a) => {
                 calc_damage(*a, caster, target);
             },
-            Effect::Buff(a) => (),
+            Effect::Buff(a) => caster.effects.push(a.clone()),
+            Effect::Heal(a) => (),
         }
     }
+
 }
 
 fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
@@ -139,7 +179,7 @@ fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
     let mut dmg_up = 1.0;
 
     for effect in &caster.effects{
-        match effect {
+        match effect.buff_type {
             BuffType::AttackUp(a) => atk_up += a,
             BuffType::DamageUp(a) => dmg_up += a,
             _ => (),
@@ -151,7 +191,7 @@ fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
     let def = target.stats.def;
 
     for effect in &target.effects{
-        match effect {
+        match effect.buff_type {
             BuffType::DefenseUp(a) => def_up += a,
             _ => (),
         }
@@ -159,7 +199,7 @@ fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
 
     let total_def = def * def_up;
 
-    let total_dmg = raw_dmg * 1.0/(1.05_f32.powf(total_def));
+    let total_dmg = raw_dmg * 1.0/(1.02_f32.powf(total_def));
 
     println!("raw damage: {} \ntotal damage: {}", raw_dmg, total_dmg);
 
@@ -172,13 +212,13 @@ fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
 
 }
 
-fn search_skill(skill_name: String, skill_list: &Vec<Skill>) -> Option<&Skill>{
+fn search_skill(skill_name: String, skill_list: &Vec<Skill>) -> Skill{
     for skill in skill_list {
         if skill.name == skill_name{
-            return Some(skill);
+            return skill.clone();
         }
     }
-    None
+    Skill::new_empty()
 }
 
 //takes a user input and returns it as an int

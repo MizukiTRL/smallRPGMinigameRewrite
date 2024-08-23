@@ -84,6 +84,8 @@ fn make_skills() -> Vec<Skill>{
 
 pub fn combat(player: &mut Entity, enemy: &mut Entity) {
     let skill_list = make_skills();
+    let mut points = 5;
+    let max_points = 10;
     //turn loop
     loop {
         //menu selection loop
@@ -96,13 +98,23 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
             match input {
                 //attack
                 1 => {
-                    use_skill(player,"basic".to_string(),enemy, &skill_list);
+                    let skill = search_skill("basic".to_string(), &skill_list);
+                    use_skill(player,enemy, &skill);
                     break;
                 },
                 //skill
                 2 => {
-                    skill_menu(player, enemy, &skill_list);
-                    break;
+                    let skill_index = skill_menu(player);
+                    if skill_index < 4{
+                        let skill = search_skill(player.skills[skill_index as usize].clone(), &skill_list);
+                        if points >= skill.cost{
+                            points -= skill.cost;
+                            use_skill(player, enemy, &skill);
+                            break;
+                        }
+                        
+                    }
+
                 },
                 //defend
                 3 => {
@@ -116,50 +128,50 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
                 _ => println!("wrong number, please try again"),
             }
         }
+        points += 3;
+        if points > max_points{
+            points = max_points;
+        }
     }
 }
 
-fn skill_menu(player: &mut Entity, enemy: &mut Entity, skill_list: &Vec<Skill>){
+fn skill_menu(player: &mut Entity) -> u8{
     loop {
         let mut input2 = option_input();
-        let success = false;
 
         match input2 {
         //skills
             1 => {
                 if player.skills[0] != ""{
-                    use_skill(player, player.skills[0].clone(), enemy, skill_list);
-                    break;
+                    return 0;
                 }
             },
             2 => {
                 if player.skills[1] != ""{
-                    use_skill(player, player.skills[1].clone(), enemy, skill_list);
-                    break;
+                    return 1;
                 }
             },
             3 => {
                 if player.skills[2] != ""{
-                    use_skill(player, player.skills[2].clone(), enemy, skill_list);
-                    break;
+                    
+                    return 2;
                 }
             },
             4 => {
                 if player.skills[3] != ""{
-                    use_skill(player, player.skills[3].clone(), enemy, skill_list);
-                    break;
+                    
+                    return 3;
                 }
             },
             //go back
-            5 => break,
+            5 => return 4,
             _ => println!("wrong number, please try again"),
         }
     }
 }
 
 //applies the effects of skills
-fn use_skill(caster: &mut Entity, skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
-    let skill = search_skill(skill_name, skill_list);
+fn use_skill(caster: &mut Entity, target: &mut Entity, skill: &Skill) {
     let success = true;
 
     for effect in &skill.effects{
@@ -168,7 +180,12 @@ fn use_skill(caster: &mut Entity, skill_name: String, target: &mut Entity, skill
                 calc_damage(*a, caster, target);
             },
             Effect::Buff(a) => caster.effects.push(a.clone()),
-            Effect::Heal(a) => (),
+            Effect::Heal(a) => {
+                caster.stats.cur_hp += a;
+                if caster.stats.cur_hp > caster.stats.max_hp{
+                    caster.stats.cur_hp = caster.stats.max_hp;
+                }
+            },
         }
     }
 

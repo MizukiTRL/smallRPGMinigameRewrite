@@ -1,22 +1,25 @@
 #![allow(unused)]
 
-use super::entity::Entity;
+use super::entity::{Entity, Status};
 use std::{
-    collections::vec_deque, io::{self, Read}, str::FromStr
+    clone, collections::vec_deque, io::{self, Read}, str::FromStr
 };
 
+#[derive(Clone, Debug)]
 struct Skill {
     name: String,
     cost: i32,
     effects: Vec<Effect>,
 }
 
+#[derive(Clone, Debug)]
 enum Effect {
     Attack(f32),
     Buff(BuffType),
 }
 
-enum BuffType {
+#[derive(Clone, Debug)]
+pub enum BuffType {
     AttackUp(f32),
     DamageUp(f32),
     DefenseUp(f32),
@@ -83,7 +86,7 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
 
             match input {
                 //attack
-                1 => use_skill("basic".to_string(),enemy, &skill_list),
+                1 => use_skill(player,"basic".to_string(),enemy, &skill_list),
                 //skill
                 2 => skill_menu(player, enemy, &skill_list),
                 //defend
@@ -115,7 +118,7 @@ fn skill_menu(player: &mut Entity, enemy: &mut Entity, skill_list: &Vec<Skill>){
 }
 
 //applies the effects of skills
-fn use_skill(skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
+fn use_skill(caster: &mut Entity,skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
     let skill = match search_skill(skill_name, skill_list) {
         Some(a) => a,
         None => panic!("failed to find the skill"),
@@ -123,10 +126,50 @@ fn use_skill(skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
 
     for effect in &skill.effects{
         match effect {
-            Effect::Attack(a) => (),
+            Effect::Attack(a) => {
+                calc_damage(*a, caster, target);
+            },
             Effect::Buff(a) => (),
         }
     }
+}
+
+fn calc_damage(motion_value: f32, caster: &mut Entity, target: &mut Entity){
+    let mut atk_up = 1.0;
+    let mut dmg_up = 1.0;
+
+    for effect in &caster.effects{
+        match effect {
+            BuffType::AttackUp(a) => atk_up += a,
+            BuffType::DamageUp(a) => dmg_up += a,
+            _ => (),
+        }
+    }
+    let raw_dmg = ((caster.stats.atk * atk_up) * motion_value) * dmg_up;
+
+    let mut def_up = 1.0;
+    let def = target.stats.def;
+
+    for effect in &target.effects{
+        match effect {
+            BuffType::DefenseUp(a) => def_up += a,
+            _ => (),
+        }
+    }
+
+    let total_def = def * def_up;
+
+    let total_dmg = raw_dmg * 1.0/(1.05_f32.powf(total_def));
+
+    println!("raw damage: {} \ntotal damage: {}", raw_dmg, total_dmg);
+
+    target.stats.cur_hp -= total_dmg as i32;
+
+    if target.stats.cur_hp <= 0{
+        target.stats.cur_hp = 0;
+        target.status = Status::Dead;
+    }
+
 }
 
 fn search_skill(skill_name: String, skill_list: &Vec<Skill>) -> Option<&Skill>{

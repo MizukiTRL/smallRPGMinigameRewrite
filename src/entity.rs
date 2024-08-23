@@ -1,12 +1,20 @@
 #![allow(unused)]
-
+use super::combat::BuffType;
 #[derive(Clone, Debug)]
 pub struct Entity {
     name: String,
-    stats: Stats,
+    pub stats: Stats,
     poitions: Position,
     entity_type: EntityType,
-    skills: [String; 4],
+    pub skills: [String; 4],
+    pub effects: Vec<BuffType>,
+    pub status : Status,
+}
+
+#[derive(Clone, Debug)]
+pub enum Status{
+    Dead,
+    Alive,
 }
 
 #[derive(Clone, Debug)]

@@ -2,12 +2,12 @@
 
 use super::entity::Entity;
 use std::{
-    io::{self, Read},
-    str::FromStr,
+    collections::vec_deque, io::{self, Read}, str::FromStr
 };
 
 struct Skill {
     name: String,
+    cost: i32,
     effects: Vec<Effect>,
 }
 
@@ -24,46 +24,68 @@ enum BuffType {
 }
 
 impl Skill {
-    pub fn new(name: String, effects: Vec<Effect>) -> Self {
-        Skill { name, effects }
+    pub fn new(name: String,cost: i32, effects: Vec<Effect>) -> Self {
+        Skill { 
+            name: name, 
+            cost: cost,  
+            effects:effects 
+        }
     }
     pub fn new_empty() -> Self {
         Skill {
             name: "".to_string(),
+            cost: 0,
             effects: vec![],
         }
     }
 }
 
-pub fn make_skills() {
+fn make_skills() -> Vec<Skill>{
+
+    let basic = Skill::new(
+        "basic".to_string(), 
+        0, 
+        vec![Effect::Attack(0.6)]
+    );
+
     let fire_ball = Skill::new(
         "fire ball".to_string(),
+        3,
         vec![
             Effect::Attack(1.0)
             ]
     );
     let heal = Skill::new(
         "heal".to_string(),
+        2,
         vec![
             Effect::Buff(BuffType::Heal(200))
         ]
     );
+    let splash = Skill::new(
+        "splash".to_string(), 
+        10, 
+        vec![Effect::Attack(0.0)]
+    );
+
+    let skills = vec![basic, fire_ball, heal, splash];
+
+    skills
 }
 
 pub fn combat(player: &mut Entity, enemy: &mut Entity) {
-    let mut turns = true;
-
-    while turns {
-        let mut selection_menu_1 = true;
-
-        while selection_menu_1 {
+    let skill_list = make_skills();
+    //turn loop
+    loop {
+        //menu selection loop
+        loop {
             let mut input = option_input();
 
             match input {
                 //attack
-                1 => (),
+                1 => use_skill("basic".to_string(),enemy, &skill_list),
                 //skill
-                2 => skill_menu(player, enemy),
+                2 => skill_menu(player, enemy, &skill_list),
                 //defend
                 3 => (),
                 //flee
@@ -75,9 +97,8 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
     }
 }
 
-fn skill_menu(player: &mut Entity, enemy: &mut Entity){
-    let selection_menu = true;
-    while selection_menu {
+fn skill_menu(player: &mut Entity, enemy: &mut Entity, skill_list: &Vec<Skill>){
+    loop {
         let mut input2 = option_input();
 
         match input2 {
@@ -87,10 +108,34 @@ fn skill_menu(player: &mut Entity, enemy: &mut Entity){
             3 => (),
             4 => (),
             //go back
-            5 => (),
+            5 => break,
             _ => println!("wrong number, please try again"),
         }
     }
+}
+
+//applies the effects of skills
+fn use_skill(skill_name: String, target: &mut Entity, skill_list: &Vec<Skill>) {
+    let skill = match search_skill(skill_name, skill_list) {
+        Some(a) => a,
+        None => panic!("failed to find the skill"),
+    };
+
+    for effect in &skill.effects{
+        match effect {
+            Effect::Attack(a) => (),
+            Effect::Buff(a) => (),
+        }
+    }
+}
+
+fn search_skill(skill_name: String, skill_list: &Vec<Skill>) -> Option<&Skill>{
+    for skill in skill_list {
+        if skill.name == skill_name{
+            return Some(skill);
+        }
+    }
+    None
 }
 
 //takes a user input and returns it as an int

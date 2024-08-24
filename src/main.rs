@@ -3,6 +3,7 @@ use entity::Entity;
 mod combat;
 mod entity;
 mod interface;
+mod map;
 
 fn test1() {
     let mut player = Entity::new(
@@ -35,7 +36,12 @@ fn test1() {
 
     combat::combat(&mut player, &mut enemy);
 }
+
+fn test2(){
+    let level1 = map::Level::new("test2".to_string(), 10, 10);
+    level1.print_grid();
+}
 fn main() {
     println!("Hello, world!");
-    test1();
+    test2();
 }

@@ -69,4 +69,27 @@ impl Entity {
             status: Status::Alive,
         }
     }
+
+    pub fn get_x(&self) -> usize{
+        self.poitions.x as usize
+    }
+    pub fn get_y(&self) -> usize{
+        self.poitions.y as usize
+    }
+
+    pub fn move_up(&mut self){
+        self.poitions.y -= 1;
+    }
+
+    pub fn move_left(&mut self){
+        self.poitions.x -= 1;;
+    }
+
+    pub fn move_down(&mut self){
+        self.poitions.y += 1
+    }
+
+    pub fn move_right(&mut self){
+        self.poitions.x += 1
+    }
 }

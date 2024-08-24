@@ -2,6 +2,8 @@
 
 use rand::Rng;
 
+use crate::entity;
+
 use super::entity::{Entity, Status};
 use super::interface;
 use std::{
@@ -93,6 +95,7 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
     let max_points = 10;
     //turn loop
     loop {
+        println!("points: {}", points);
         interface::battle_interface(player, enemy);
         //menu selection loop
         loop {
@@ -152,6 +155,9 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
         if points > max_points {
             points = max_points;
         }
+
+        tick_down_effects(player);
+        tick_down_effects(enemy);
     }
 }
 
@@ -258,6 +264,21 @@ fn search_skill(skill_name: String, skill_list: &Vec<Skill>) -> Skill {
         }
     }
     Skill::new_empty()
+}
+
+fn tick_down_effects(entity: &mut Entity){
+    let mut remove_list: Vec<usize> = vec![];
+    for (i, effect) in entity.effects.iter_mut().enumerate().rev(){
+        if effect.duration > 0{
+            effect.duration -= 1;
+        }else{
+            remove_list.push(i);
+        }
+    }
+
+    for i in remove_list{
+        entity.effects.remove(i);
+    }
 }
 
 //takes a user input and returns it as an int

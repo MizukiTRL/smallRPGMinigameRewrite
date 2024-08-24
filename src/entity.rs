@@ -10,11 +10,11 @@ pub struct Entity {
     pub entity_type: EntityType,
     pub skills: [String; 4],
     pub effects: Vec<StatusEffect>,
-    pub status : Status,
+    pub status: Status,
 }
 
 #[derive(Clone, Debug)]
-pub enum Status{
+pub enum Status {
     Dead,
     Alive,
 }
@@ -40,15 +40,33 @@ pub enum EntityType {
 }
 
 impl Entity {
-    pub fn new(name: String, max_hp: i32, atk: f32, def: f32, x: i32, y: i32, entity_type: EntityType) -> Self{
-        Entity{
+    pub fn new(
+        name: String,
+        max_hp: i32,
+        atk: f32,
+        def: f32,
+        x: i32,
+        y: i32,
+        entity_type: EntityType,
+    ) -> Self {
+        Entity {
             name: name,
-            stats: Stats { max_hp: max_hp, cur_hp: max_hp, atk: atk, def: def },
+            stats: Stats {
+                max_hp: max_hp,
+                cur_hp: max_hp,
+                atk: atk,
+                def: def,
+            },
             poitions: Position { x: x, y: y },
             entity_type: entity_type,
-            skills: ["".to_string(), "".to_string(), "".to_string(), "".to_string()],
+            skills: [
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+            ],
             effects: vec![],
-            status: Status::Alive
+            status: Status::Alive,
         }
     }
 }

@@ -17,7 +17,7 @@ fn test1() {
 
     let mut enemy = Entity::new(
         "enemy test".to_string(),
-        1000,
+        100,
         200.0,
         50.0,
         6,
@@ -28,6 +28,7 @@ fn test1() {
     player.skills[0] = "fire ball".to_string();
     player.skills[1] = "heal".to_string();
     player.skills[2] = "charisma". to_string();
+    player.skills[3] = "splash".to_string();
 
     enemy.skills[0] = "heal".to_string();
     enemy.skills[1] = "fire ball".to_string();

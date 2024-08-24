@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::combat::{BuffType, Skill};
 use crate::entity::Entity;
 

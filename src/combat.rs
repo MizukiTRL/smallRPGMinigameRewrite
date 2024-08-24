@@ -89,7 +89,8 @@ fn rand_range(first: i32, last: i32) -> i32 {
     let rand_num = rand.gen_range(first..=last);
     rand_num
 }
-pub fn combat(player: &mut Entity, enemy: &mut Entity) {
+pub fn combat(player: &mut Entity, enemy: &mut Entity) -> bool{
+    let mut win = true;
     let skill_list = make_skills();
     let mut points = 5;
     let max_points = 10;
@@ -111,12 +112,14 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
                 //skill
                 2 => {
                     interface::skill_selection_interface(player);
+                    println!("5- Return");
                     let skill_index = skill_menu(player);
                     if skill_index < 4 {
                         let skill =
                             search_skill(player.skills[skill_index as usize].clone(), &skill_list);
                         if points >= skill.cost {
                             points -= skill.cost;
+                            println!("cost: {}" , skill.cost);
                             use_skill(player, enemy, &skill);
                             break;
                         } else {
@@ -158,6 +161,73 @@ pub fn combat(player: &mut Entity, enemy: &mut Entity) {
 
         tick_down_effects(player);
         tick_down_effects(enemy);
+
+        match player.status {
+            Status::Dead => {
+                win = false;
+                println!("you died");
+                return win;
+            },
+            Status::Alive => (),
+        }
+
+        match enemy.status {
+            Status::Alive => (),
+            Status::Dead => {
+                win = true;
+                println!("you won!");
+                win_new_skill(player, enemy, &skill_list);
+                return win;
+            }
+        }
+    }
+
+}
+
+fn win_new_skill(player: &mut Entity, enemy: &Entity, skill_list: &Vec<Skill>){
+    loop{
+        let rand_num = rand_range(0, 3);
+
+        if enemy.skills[rand_num as usize] != "" {
+            let skill = enemy.skills[rand_num as usize].clone();
+            
+            for s in &mut player.skills{
+                if s == ""{
+                    *s = skill.clone();
+                    return;
+                }
+            }
+
+            println!("select the skill you want to replace: ");
+            interface::skill_selection_interface(&player);
+            println!("5- None");
+            loop{
+                let input = option_input();
+
+                match input {
+                    1 => {
+                        player.skills[0] = skill;
+                        break;
+                    },
+                    2 => {
+                        player.skills[1] = skill;
+                        break;
+                    },
+                    3 => {
+                        player.skills[2] = skill;
+                        break;
+                    },
+                    4 => {
+                        player.skills[3] = skill;
+                        break;
+                    },
+                    5 => return,
+                    _ => println!("incorrect input please try again")
+                }
+            }
+
+            break;
+        }
     }
 }
 

@@ -163,11 +163,9 @@ pub fn check_colision_obstacle(player: &mut Entity, obstacles: &Vec<Obstacle>)->
     let mut  ans = false;
     for obstacle in obstacles{
         let check1 = (player.get_x() as i32) == obstacle.x;
-        let check2 = (player.get_x() as i32) == obstacle.x;
-        let check3 = (player.get_y() as i32) == obstacle.y;
-        let check4 = (player.get_y() as i32) == obstacle.y;
+        let check2 = (player.get_y() as i32) == obstacle.y;
 
-        ans = (check1 || check2) & (check3||check2);
+        ans = (check1 && check2);
     }
     ans
 }
@@ -176,11 +174,9 @@ pub fn check_colision_enemy<'a>(player: &Entity, enemies: &'a mut Vec<Entity>) -
     let mut  ans = false;
     for enemy in enemies{
         let check1 = player.get_x() == enemy.get_x();
-        let check2 = player.get_x() == enemy.get_x();
-        let check3 = player.get_y() == enemy.get_x();
-        let check4 = player.get_y() == enemy.get_x();
+        let check2 = player.get_y() == enemy.get_x();
 
-        ans = (check1 || check2) & (check3||check2);
+        ans = (check1 && check2);
 
         if ans{
             return Some(enemy);

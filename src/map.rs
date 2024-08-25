@@ -2,7 +2,7 @@
 
 use std::{io::{self, Empty}, slice::ChunksExact};
 
-use crate::entity::Entity;
+use crate::{combat, entity::Entity};
 
 #[derive(Clone, Debug)]
 pub struct Level{
@@ -87,25 +87,73 @@ impl Level{
     }
 }
 
-pub fn map(level: &mut Level, player: &mut Entity, enemies: &mut Vec<Entity>, obstacles: Vec<Obstacle>){
+pub fn map(level: &mut Level, player: &mut Entity, enemies: &mut Vec<Entity>, obstacles: &mut Vec<Obstacle>){
 
     loop {
-        
+        level.update_grid(player, enemies, obstacles);
+        level.print_grid();
+        movement(level, player, enemies, obstacles);
     }
 }
 
-pub fn movement(player: &mut Entity, enemies: &mut Vec<Entity>, obstacles: &Vec<Obstacle>){
+pub fn movement(level: &mut Level, player: &mut Entity, enemies: &mut Vec<Entity>, obstacles: &mut Vec<Obstacle>){
     loop {
         let input = option_input();
+        let mut alive = true;
         match input {
             'w' => {
-                if player.get_x() > 0 && !check_colision_obstacle(player, obstacles){
+                if player.get_y() > 0{
                     player.move_up();
+                    if check_colision_obstacle(player, obstacles){
+                        player.move_down();
+                    }
+                }
+                let enemy =check_colision_enemy(player, enemies);
+                match enemy {
+                    Some(a) => alive = combat::combat(player, a),
+                    None => break,
                 }
             },
-            'a' => (),
-            's' => (),
-            'd' => (),
+            'a' => {
+                if player.get_x() > 0{
+                    player.move_left();
+                    if check_colision_obstacle(player, obstacles){
+                        player.move_right();
+                    }
+                }
+                let enemy =check_colision_enemy(player, enemies);
+                match enemy {
+                    Some(a) => alive = combat::combat(player, a),
+                    None => break,
+                }
+
+            },
+            's' => {
+                if (player.get_y() as i32) < (level.grid.height -1){
+                    player.move_down();
+                    if check_colision_obstacle(player, obstacles){
+                        player.move_up();
+                    }
+                }
+                let enemy =check_colision_enemy(player, enemies);
+                match enemy {
+                    Some(a) => alive = combat::combat(player, a),
+                    None => break,
+                }
+            },
+            'd' => {
+                if (player.get_x() as i32) < (level.grid.width -1){
+                    player.move_right();
+                    if check_colision_obstacle(player, obstacles){
+                        player.move_left();
+                    }
+                }
+                let enemy =check_colision_enemy(player, enemies);
+                match enemy {
+                    Some(a) => alive = combat::combat(player, a),
+                    None => break,
+                }
+            },
             _ => println!("wrong input"),
         }
     }
@@ -114,10 +162,10 @@ pub fn movement(player: &mut Entity, enemies: &mut Vec<Entity>, obstacles: &Vec<
 pub fn check_colision_obstacle(player: &mut Entity, obstacles: &Vec<Obstacle>)-> bool{
     let mut  ans = false;
     for obstacle in obstacles{
-        let check1 = (player.get_x() as i32) < obstacle.x;
-        let check2 = (player.get_x() as i32) > obstacle.x;
-        let check3 = (player.get_y() as i32) < obstacle.y;
-        let check4 = (player.get_y() as i32) > obstacle.y;
+        let check1 = (player.get_x() as i32) == obstacle.x;
+        let check2 = (player.get_x() as i32) == obstacle.x;
+        let check3 = (player.get_y() as i32) == obstacle.y;
+        let check4 = (player.get_y() as i32) == obstacle.y;
 
         ans = (check1 || check2) & (check3||check2);
     }
@@ -127,10 +175,10 @@ pub fn check_colision_obstacle(player: &mut Entity, obstacles: &Vec<Obstacle>)->
 pub fn check_colision_enemy<'a>(player: &Entity, enemies: &'a mut Vec<Entity>) -> Option<&'a mut Entity>{
     let mut  ans = false;
     for enemy in enemies{
-        let check1 = player.get_x() < enemy.get_x();
-        let check2 = player.get_x() > enemy.get_x();
-        let check3 = player.get_y() < enemy.get_x();
-        let check4 = player.get_y() > enemy.get_x();
+        let check1 = player.get_x() == enemy.get_x();
+        let check2 = player.get_x() == enemy.get_x();
+        let check3 = player.get_y() == enemy.get_x();
+        let check4 = player.get_y() == enemy.get_x();
 
         ans = (check1 || check2) & (check3||check2);
 
